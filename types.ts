@@ -1,52 +1,53 @@
 
-export type CustomerStatus = 'pending_payment' | 'waiting_merat' | 'rejected' | 'completed';
+
+export type CustomerStatus = 
+  | 'pending_payment' 
+  | 'waiting_merat' 
+  | 'waiting_account' 
+  | 'waiting_completion' 
+  | 'rejected' 
+  | 'completed';
 
 export interface Customer {
   id: string;
   status: CustomerStatus;
-  // Personal
-  fullName: string;
-  fatherName: string;
-  nationalId: string;
-  cardBackId: string;
-  mobile: string;
-  fixedPhone: string;
-  secondMobile: string;
-  address: string;
-  certificateId: string;
-  birthDate: string;
-  // Job
+  tracking_code: string;
+  // Database Mapped Fields
+  full_name: string;
+  fother_name: string;
+  phone_number: string; // Mobile 1
+  national_id: string;
+  seriBirth_certificate_number: string; // سریال شناسنامه
+  national_id_card_series: string; // سریال پشت کارت ملی
+  Date_of_birth: string;
+  phone_number_two: string; // Mobile 2
+  landline: string; // تلفن ثابت
+  home_address: string;
+  
+  // Job & Financial
   jobTitle: string;
-  workPhone: string;
-  experienceYears: string;
   position: string;
+  experienceYears: string;
+  workPhone: string;
   salary: string;
   workAddress: string;
-  // Supplementary
-  serviceType: string;
-  // Loan
-  startDate: string;
-  endDate: string;
-  guarantorMobile: string;
-  guarantorName: string;
-  notes: string;
-  // Status
+  
+  // Meta
+  bankName: string;
   guaranteeType: string;
-  officeFee: string;
-  loanAmount: string;
-  deductions: string;
   acquiredVia: string;
-  referrer: string;
-  matchedAmount: string; // مبلغ متناسب تایید شده
-}
+  notes: string;
 
-export interface EstimationRow {
-  month: number;
-  repayment: string;
-  twelveMonth: string;
-  tenMonth: string;
-  finalAmount: string;
-  profit: string;
+  // Loan and Facility specific fields (Requested by Print and View modules)
+  serviceType?: string;
+  loanAmount?: string;
+  guarantorName?: string;
+  deductions?: string;
+  officeFee?: string;
+  
+  // Legacy support for other parts of app
+  fullName?: string; 
+  mobile?: string;
 }
 
 export type UserRole = 'admin' | 'staff';
@@ -58,24 +59,4 @@ export interface User {
   role: UserRole;
   lastLogin: string;
   status: 'active' | 'inactive';
-}
-
-// Chat Types
-export interface Message {
-  id: string;
-  text: string;
-  sender: 'support' | 'customer';
-  timestamp: string;
-  status: 'sent' | 'delivered' | 'read';
-}
-
-export interface ChatRoom {
-  id: string;
-  customerId: string;
-  customerName: string;
-  lastMessage: string;
-  lastUpdate: string;
-  unreadCount: number;
-  online: boolean;
-  avatar?: string;
 }

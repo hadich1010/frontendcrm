@@ -6,17 +6,23 @@ export const toPersianDigits = (n: string | number): string => {
 };
 
 export const formatCurrency = (amount: string | number, unit: 'toman' | 'rial' = 'toman'): string => {
-  let num = typeof amount === 'string' ? parseInt(amount.replace(/,/g, '').replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d).toString())) : amount;
+  if (amount === null || amount === undefined || amount === '') return toPersianDigits(0);
+  
+  let numStr = amount.toString().replace(/,/g, '').replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d).toString());
+  let num = parseInt(numStr);
+  
   if (isNaN(num)) return toPersianDigits(0);
   
-  // اگر واحد ریال باشد و ورودی تومان تلقی شود (بسته به منطق دیتابیس)
-  // اینجا فرض می‌کنیم دیتابیس بر اساس تومان است و فقط نمایش تغییر می‌کند
   const displayNum = unit === 'rial' ? num * 10 : num;
   return toPersianDigits(displayNum.toLocaleString());
 };
 
 export const numberToWords = (amount: string | number, unit: 'toman' | 'rial' = 'toman'): string => {
-  let num = typeof amount === 'string' ? parseInt(amount.replace(/,/g, '').replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d).toString())) : amount;
+  if (amount === null || amount === undefined || amount === '') return '';
+  
+  let numStr = amount.toString().replace(/,/g, '').replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d).toString());
+  let num = parseInt(numStr);
+  
   if (isNaN(num) || num === 0) return '';
   
   const displayNum = unit === 'rial' ? num * 10 : num;

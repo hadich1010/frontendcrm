@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MOCK_CUSTOMERS } from '../constants';
@@ -10,7 +11,7 @@ const PrintProfile: React.FC = () => {
 
   if (!customer) return <div>مشتری یافت نشد</div>;
 
-  const Row = ({ label, value }: { label: string, value: string }) => (
+  const Row = ({ label, value }: { label: string, value: string | undefined }) => (
     <div className="flex border-b border-slate-200 py-2">
       <span className="w-1/3 font-bold text-slate-700">{label}:</span>
       <span className="w-2/3 text-slate-900">{value || '-'}</span>
@@ -39,13 +40,18 @@ const PrintProfile: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
           <section>
             <h3 className="bg-slate-100 p-2 font-bold mb-4 rounded border-r-4 border-blue-600">اطلاعات شناسایی</h3>
-            <Row label="نام و نام خانوادگی" value={customer.fullName} />
-            <Row label="نام پدر" value={customer.fatherName} />
-            <Row label="کد ملی" value={customer.nationalId} />
-            <Row label="شماره شناسنامه" value={customer.certificateId} />
-            <Row label="تاریخ تولد" value={customer.birthDate} />
-            <Row label="تلفن همراه" value={customer.mobile} />
-            <Row label="تلفن ثابت" value={customer.fixedPhone} />
+            <Row label="نام و نام خانوادگی" value={customer.fullName || customer.full_name} />
+            {/* Fix: changed fatherName to fother_name to match Customer type */}
+            <Row label="نام پدر" value={customer.fother_name} />
+            {/* Fix: changed nationalId to national_id to match Customer type */}
+            <Row label="کد ملی" value={customer.national_id} />
+            {/* Fix: changed certificateId to seriBirth_certificate_number to match Customer type */}
+            <Row label="شماره شناسنامه" value={customer.seriBirth_certificate_number} />
+            {/* Fix: changed birthDate to Date_of_birth to match Customer type */}
+            <Row label="تاریخ تولد" value={customer.Date_of_birth} />
+            <Row label="تلفن همراه" value={customer.mobile || customer.phone_number} />
+            {/* Fix: changed fixedPhone to landline to match Customer type */}
+            <Row label="تلفن ثابت" value={customer.landline} />
           </section>
 
           <section>
@@ -71,7 +77,8 @@ const PrintProfile: React.FC = () => {
 
           <section className="md:col-span-2">
             <h3 className="bg-slate-100 p-2 font-bold mb-4 rounded border-r-4 border-blue-600">آدرس و یادداشت</h3>
-            <Row label="آدرس سکونت" value={customer.address} />
+            {/* Fix: changed address to home_address to match Customer type */}
+            <Row label="آدرس سکونت" value={customer.home_address} />
             <Row label="آدرس محل کار" value={customer.workAddress} />
             <div className="mt-4 p-4 border border-dashed border-slate-300 min-h-[100px] text-sm text-slate-600">
               <span className="font-bold block mb-2">یادداشت‌ها:</span>

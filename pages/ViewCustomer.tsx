@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, Edit, Printer, User, FileText, BadgeCheck, CheckCircle, MoreHorizontal } from 'lucide-react';
@@ -15,7 +16,7 @@ const ViewCustomer: React.FC = () => {
 
   if (!customer) return <div className="p-10 text-center font-bold text-red-500">یافت نشد.</div>;
 
-  const LabelValue = ({ label, value }: { label: string, value: string }) => (
+  const LabelValue = ({ label, value }: { label: string, value: string | undefined }) => (
     <div className="flex flex-col gap-1 border-b border-slate-50 pb-3 text-right">
       <span className="text-xs font-bold text-slate-400">{label}</span>
       <span className="text-sm font-extrabold text-slate-800 digits-fa">{value || '---'}</span>
@@ -55,10 +56,12 @@ const ViewCustomer: React.FC = () => {
              <User size={22} />
           </div>
           <div className="grid grid-cols-2 gap-6">
-            <LabelValue label="نام و نام خانوادگی" value={customer.fullName} />
-            <LabelValue label="کد ملی" value={toPersianDigits(customer.nationalId)} />
-            <LabelValue label="تلفن همراه" value={toPersianDigits(customer.mobile)} />
-            <LabelValue label="نام پدر" value={customer.fatherName} />
+            <LabelValue label="نام و نام خانوادگی" value={customer.fullName || customer.full_name} />
+            {/* Fix: changed nationalId to national_id */}
+            <LabelValue label="کد ملی" value={toPersianDigits(customer.national_id)} />
+            <LabelValue label="تلفن همراه" value={toPersianDigits(customer.mobile || customer.phone_number)} />
+            {/* Fix: changed fatherName to fother_name */}
+            <LabelValue label="نام پدر" value={customer.fother_name} />
           </div>
         </section>
 
@@ -68,7 +71,8 @@ const ViewCustomer: React.FC = () => {
              <FileText size={22} />
           </div>
           <div className="grid grid-cols-2 gap-6">
-            <LabelValue label="مبلغ وام" value={toPersianDigits(customer.loanAmount)} />
+            {/* Fix: loanAmount and serviceType are now supported in the Customer type */}
+            <LabelValue label="مبلغ وام" value={customer.loanAmount ? toPersianDigits(customer.loanAmount) : undefined} />
             <LabelValue label="نوع خدمات" value={customer.serviceType} />
           </div>
         </section>

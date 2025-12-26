@@ -1,21 +1,25 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 // Fix: Added AnimatePresence to the framer-motion imports
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Shield, User, Key, Save, ShieldCheck, UserCheck, Info } from 'lucide-react';
 import { MOCK_USERS } from '../constants';
+// Fix: Imported UserRole to use for state typing
+import { UserRole } from '../types';
 
 const UserForm: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = Boolean(id);
   
+  // Fix: Explicitly type the formData state to avoid union type mismatch errors
   const [formData, setFormData] = useState({
     fullName: '',
     username: '',
     password: '',
     confirmPassword: '',
-    role: 'staff' as 'admin' | 'staff'
+    role: 'staff' as UserRole
   });
 
   const [changePassword, setChangePassword] = useState(false);

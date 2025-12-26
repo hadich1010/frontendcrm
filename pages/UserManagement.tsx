@@ -12,9 +12,12 @@ const UserManagement: React.FC = () => {
   const [showPassModal, setShowPassModal] = useState<string | null>(null);
   const [newPass, setNewPass] = useState('');
 
-  const filteredUsers = MOCK_USERS.filter(u => 
-    u.fullName.includes(search) || u.username.includes(search)
-  );
+  const filteredUsers = MOCK_USERS.filter(u => {
+    const name = (u.fullName || '').toLowerCase();
+    const username = (u.username || '').toLowerCase();
+    const term = search.toLowerCase();
+    return name.includes(term) || username.includes(term);
+  });
 
   const generatePassword = () => {
     const chars = "abcdefghijklmnopqrstuvwxyz0123456789!@#$%";

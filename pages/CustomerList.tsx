@@ -13,9 +13,12 @@ const CustomerList: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const filtered = useMemo(() => {
-    return MOCK_CUSTOMERS.filter(c => 
-      c.fullName.includes(searchTerm) || c.id.includes(searchTerm)
-    );
+    return MOCK_CUSTOMERS.filter(c => {
+      const name = (c.full_name || c.fullName || '').toLowerCase();
+      const id = (c.id || '').toLowerCase();
+      const term = searchTerm.toLowerCase();
+      return name.includes(term) || id.includes(term);
+    });
   }, [searchTerm]);
 
   const paginated = useMemo(() => {
@@ -31,6 +34,8 @@ const CustomerList: React.FC = () => {
       'waiting_merat': { text: 'در انتظار مرات', class: 'bg-blue-50 text-blue-600' },
       'rejected': { text: 'رد شده', class: 'bg-rose-50 text-rose-600' },
       'completed': { text: 'تکمیل شده', class: 'bg-emerald-50 text-emerald-600' },
+      'waiting_account': { text: 'در انتظار افتتاح حساب', class: 'bg-indigo-50 text-indigo-600' },
+      'waiting_completion': { text: 'در انتظار تکمیل پرونده', class: 'bg-slate-50 text-slate-600' },
     };
     const s = map[status] || { text: 'نامشخص', class: 'bg-gray-50 text-gray-600' };
     return <span className={`px-3 py-1 rounded-full text-[10px] font-black whitespace-nowrap ${s.class}`}>{s.text}</span>;
@@ -80,16 +85,16 @@ const CustomerList: React.FC = () => {
               <div key={customer.id} className="p-5 flex flex-col gap-4 active:bg-slate-50 transition-colors">
                 <div className="flex justify-between items-start">
                   <div className="flex flex-col gap-1">
-                    <h4 className="font-black text-slate-900 text-base">{customer.fullName}</h4>
+                    <h4 className="font-black text-slate-900 text-base">{customer.full_name || customer.fullName}</h4>
                     <span className="text-[11px] font-bold text-slate-400 digits-fa">پرونده: {toPersianDigits(customer.id.padStart(4, '0'))}</span>
                   </div>
                   {getStatusBadge(customer.status)}
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <a href={`tel:${customer.mobile}`} className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-600 rounded-xl font-black text-[11px]">
+                  <a href={`tel:${customer.phone_number || customer.mobile}`} className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-600 rounded-xl font-black text-[11px]">
                     <PhoneCall size={14} />
-                    <span className="digits-fa">{toPersianDigits(customer.mobile)}</span>
+                    <span className="digits-fa">{toPersianDigits(customer.phone_number || customer.mobile || '')}</span>
                   </a>
                   <div className="flex gap-2">
                     <Link to={`/view-customer/${customer.id}`} className="p-2.5 bg-slate-900 text-white rounded-xl shadow-md"><Eye size={16} /></Link>
@@ -115,10 +120,10 @@ const CustomerList: React.FC = () => {
                 {paginated.map((customer) => (
                   <tr key={customer.id} className="hover:bg-indigo-50/30 transition-colors group">
                     <td className="px-8 py-5 font-black text-slate-400 digits-fa text-sm">{toPersianDigits(customer.id.padStart(4, '0'))}</td>
-                    <td className="px-8 py-5 font-black text-slate-800">{customer.fullName}</td>
+                    <td className="px-8 py-5 font-black text-slate-800">{customer.full_name || customer.fullName}</td>
                     <td className="px-8 py-5">
-                      <a href={`tel:${customer.mobile}`} className="flex items-center gap-2 text-slate-600 hover:text-emerald-600 font-bold text-sm digits-fa transition-colors">
-                        {toPersianDigits(customer.mobile)}
+                      <a href={`tel:${customer.phone_number || customer.mobile}`} className="flex items-center gap-2 text-slate-600 hover:text-emerald-600 font-bold text-sm digits-fa transition-colors">
+                        {toPersianDigits(customer.phone_number || customer.mobile || '')}
                       </a>
                     </td>
                     <td className="px-8 py-5">{getStatusBadge(customer.status)}</td>
