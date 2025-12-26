@@ -1,116 +1,93 @@
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Settings as SettingsIcon, Coins, Shield, Palette, Database, Check } from 'lucide-react';
+import { Coins, Shield, Palette, Check } from 'lucide-react';
 import { toPersianDigits } from '../utils/format';
 
 const Settings: React.FC = () => {
   const [currency, setCurrency] = useState<'toman' | 'rial'>('toman');
+  const [logoutTimer, setLogoutTimer] = useState(30);
+  const [showQR, setShowQR] = useState(false);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-10 pb-20">
-      <header className="px-2">
-        <h1 className="text-3xl font-black text-slate-950 flex items-center gap-3">
-          <SettingsIcon size={32} className="text-indigo-600" />
-          تنظیمات زیرساخت
-        </h1>
-        <p className="text-slate-600 font-bold mt-2 text-sm">مدیریت واحد پول، امنیت و ظاهر سامانه</p>
+    <div className="max-w-3xl mx-auto space-y-10 pb-20 text-right">
+      <header>
+        <h1 className="text-3xl font-black text-slate-900">تنظیمات</h1>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* واحد پول */}
-        <section className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-8">
-          <div className="flex items-center gap-4 border-b border-slate-100 pb-4">
-             <div className="p-3 bg-indigo-50 text-indigo-700 rounded-2xl">
-               <Coins size={24} />
-             </div>
-             <h2 className="text-xl font-black text-slate-950">نمایش مبالغ</h2>
+      <div className="grid grid-cols-1 gap-8">
+        <section className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-8">
+          <div className="flex items-center gap-4 border-b pb-4 justify-end">
+             <h2 className="text-xl font-black text-slate-900">نمایش مبالغ</h2>
+             <Coins size={24} className="text-indigo-600" />
           </div>
-          
-          <div className="space-y-4">
-            <button 
-              onClick={() => setCurrency('toman')}
-              className={`w-full flex items-center justify-between p-6 rounded-[1.8rem] transition-all border-2 ${
-                currency === 'toman' ? 'border-indigo-600 bg-indigo-50' : 'border-slate-100'
-              }`}
-            >
-              <div className="flex flex-col text-right">
-                <span className="font-black text-lg text-slate-950">تومان</span>
-                <span className="text-[0.65rem] text-slate-500 font-bold mt-1">پیش‌فرض بازار ایران</span>
-              </div>
+          <div className="grid grid-cols-2 gap-4">
+            <button onClick={() => setCurrency('toman')} className={`p-6 rounded-[1.8rem] border-2 transition-all flex justify-between items-center ${currency === 'toman' ? 'border-indigo-600 bg-indigo-50' : 'border-slate-100 hover:border-slate-200'}`}>
               {currency === 'toman' && <Check size={20} className="text-indigo-600" />}
+              <span className="font-black">تومان</span>
             </button>
-
-            <button 
-              onClick={() => setCurrency('rial')}
-              className={`w-full flex items-center justify-between p-6 rounded-[1.8rem] transition-all border-2 ${
-                currency === 'rial' ? 'border-indigo-600 bg-indigo-50' : 'border-slate-100'
-              }`}
-            >
-              <div className="flex flex-col text-right">
-                <span className="font-black text-lg text-slate-950">ریال</span>
-                <span className="text-[0.65rem] text-slate-500 font-bold mt-1">واحد رسمی بانکی</span>
-              </div>
+            <button onClick={() => setCurrency('rial')} className={`p-6 rounded-[1.8rem] border-2 transition-all flex justify-between items-center ${currency === 'rial' ? 'border-indigo-600 bg-indigo-50' : 'border-slate-100 hover:border-slate-200'}`}>
               {currency === 'rial' && <Check size={20} className="text-indigo-600" />}
+              <span className="font-black">ریال</span>
             </button>
           </div>
         </section>
 
-        {/* امنیت */}
-        <section className="bg-slate-950 p-8 rounded-[2.5rem] text-white shadow-xl space-y-8 relative overflow-hidden">
-          <div className="flex items-center gap-4 border-b border-white/10 pb-4 relative z-10">
-             <div className="p-3 bg-white/5 text-indigo-400 rounded-2xl">
-               <Shield size={24} />
-             </div>
-             <h2 className="text-xl font-black">امنیت دسترسی</h2>
+        <section className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-8">
+          <div className="flex items-center gap-4 border-b pb-4 justify-end">
+             <h2 className="text-xl font-black text-slate-900">امنیت</h2>
+             <Shield size={24} className="text-rose-600" />
           </div>
-          
-          <div className="space-y-6 relative z-10">
-            <div className="flex items-center justify-between p-2">
-              <span className="text-sm font-bold">تایید دو مرحله‌ای</span>
-              <div className="w-10 h-5 bg-indigo-600 rounded-full flex items-center px-1">
-                <div className="w-3.5 h-3.5 bg-white rounded-full translate-x-5" />
+          <div className="space-y-8">
+            <div className="flex flex-col gap-6">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-black digits-fa text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg">{toPersianDigits(logoutTimer)} دقیقه</span>
+                <label className="text-sm font-bold text-slate-600">زمان خروج خودکار</label>
               </div>
+              <input 
+                type="range" 
+                min="10" 
+                max="60" 
+                value={logoutTimer} 
+                onChange={(e) => setLogoutTimer(parseInt(e.target.value))} 
+                className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" 
+              />
             </div>
-            <div className="flex items-center justify-between p-2">
-              <span className="text-sm font-bold">خروج خودکار</span>
-              <span className="text-xs font-black text-indigo-400">{toPersianDigits(۳۰)} دقیقه</span>
+            
+            <div className="pt-6 border-t border-slate-50">
+              <button 
+                onClick={() => setShowQR(!showQR)} 
+                className={`w-full p-5 rounded-2xl font-black text-sm transition-all ${showQR ? 'bg-slate-100 text-slate-600' : 'bg-slate-900 text-white shadow-xl shadow-slate-200'}`}
+              >
+                تایید دو مرحله‌ای
+              </button>
+              {showQR && (
+                <div className="mt-6 p-8 bg-slate-50 rounded-[2rem] flex flex-col items-center gap-4 border border-slate-100">
+                  <div className="w-44 h-44 bg-white p-3 rounded-3xl shadow-sm border border-slate-100">
+                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=ATA_AUTH_${logoutTimer}`} alt="QR Code" className="w-full h-full" />
+                  </div>
+                  <p className="text-[10px] font-bold text-slate-400">اسکن با Google Authenticator</p>
+                </div>
+              )}
             </div>
-            <button className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-[0.7rem] font-black uppercase hover:bg-white/10 transition-all">
-              تغییر رمز عبور اصلی
-            </button>
           </div>
-          <Shield className="absolute -right-12 -bottom-12 w-48 h-48 text-indigo-600 opacity-10" />
         </section>
 
-        {/* ظاهر */}
-        <section className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-6">
-           <div className="flex items-center gap-4">
-             <Palette size={24} className="text-slate-400" />
-             <h3 className="text-lg font-black text-slate-950">رنگ سازمانی</h3>
+        <section className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6">
+           <div className="flex items-center gap-4 justify-end border-b pb-4">
+             <h3 className="text-lg font-black text-slate-900">پالت رنگی</h3>
+             <Palette size={24} className="text-indigo-600" />
            </div>
-           <div className="flex gap-4">
-             {['#4F46E5', '#10B981', '#F59E0B', '#F43F5E', '#000'].map(c => (
-               <div key={c} style={{ backgroundColor: c }} className="w-10 h-10 rounded-xl cursor-pointer hover:scale-110 transition-transform shadow-sm"></div>
+           <div className="flex gap-4 justify-end flex-wrap">
+             {['#4F46E5', '#10B981', '#F59E0B', '#F43F5E', '#1B1B1B'].map(c => (
+               <div key={c} style={{ backgroundColor: c }} className="w-12 h-12 rounded-2xl cursor-pointer hover:scale-110 transition-transform shadow-sm border-2 border-white"></div>
              ))}
            </div>
         </section>
-
-        {/* پشتیبان‌گیری */}
-        <section className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-6">
-           <div className="flex items-center gap-4">
-             <Database size={24} className="text-slate-400" />
-             <h3 className="text-lg font-black text-slate-950">پشتیبان‌گیری</h3>
-           </div>
-           <button className="w-full py-4 bg-slate-50 text-indigo-700 rounded-2xl font-black text-xs border border-indigo-100 hover:bg-indigo-600 hover:text-white transition-all">
-             دریافت خروجی دیتابیس
-           </button>
-        </section>
       </div>
 
-      <div className="flex justify-end pt-8">
-        <button className="px-12 py-5 bg-indigo-600 text-white rounded-[2rem] font-black text-lg shadow-xl shadow-indigo-100 border-b-4 border-indigo-800 transition-all active:translate-y-1 active:border-b-0">
-          ذخیره تغییرات نهایی
+      <div className="flex justify-center pt-8">
+        <button className="w-full md:w-auto px-20 py-6 bg-indigo-600 text-white rounded-[2rem] font-black text-lg shadow-2xl shadow-indigo-100 transition-all active:scale-95">
+          ثبت تغییرات
         </button>
       </div>
     </div>

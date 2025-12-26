@@ -1,132 +1,104 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowRight, Edit, Printer, User, Briefcase, FileText, BadgeCheck, Calculator } from 'lucide-react';
+import { ArrowRight, Edit, Printer, User, FileText, BadgeCheck, CheckCircle, MoreHorizontal } from 'lucide-react';
 import { MOCK_CUSTOMERS } from '../constants';
+import { toPersianDigits } from '../utils/format';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const ViewCustomer: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [showActions, setShowActions] = useState(false);
+  const [showApproveModal, setShowApproveModal] = useState(false);
   const customer = MOCK_CUSTOMERS.find(c => c.id === id);
 
-  if (!customer) return <div className="p-10 text-center font-bold text-red-500">مشتری مورد نظر یافت نشد.</div>;
+  if (!customer) return <div className="p-10 text-center font-bold text-red-500">یافت نشد.</div>;
 
   const LabelValue = ({ label, value }: { label: string, value: string }) => (
-    <div className="flex flex-col gap-1 border-b border-slate-50 pb-3">
+    <div className="flex flex-col gap-1 border-b border-slate-50 pb-3 text-right">
       <span className="text-xs font-bold text-slate-400">{label}</span>
-      <span className="text-sm font-extrabold text-slate-800">{value || '---'}</span>
+      <span className="text-sm font-extrabold text-slate-800 digits-fa">{value || '---'}</span>
     </div>
   );
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-top-4 duration-500 pb-20">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div>
-           <h1 className="text-3xl font-black text-slate-800">پروفایل مشتری</h1>
-           <p className="text-slate-500 font-medium">مشاهده اطلاعات کامل و وضعیت پرونده {customer.fullName}</p>
+    <div className="max-w-4xl mx-auto space-y-8 pb-20">
+      <header className="flex justify-between items-center">
+        <h1 className="text-3xl font-black text-slate-900">پروفایل</h1>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <button onClick={() => setShowActions(!showActions)} className="p-3 bg-white border border-slate-200 rounded-2xl text-slate-600">
+              <MoreHorizontal size={24} />
+            </button>
+            <AnimatePresence>
+              {showActions && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute left-0 top-full mt-2 w-48 bg-white border rounded-2xl shadow-xl p-2 z-50">
+                  <Link to={`/edit-customer/${customer.id}`} className="flex items-center gap-2 p-3 text-sm font-bold text-slate-700 hover:bg-slate-50 rounded-xl">
+                    <Edit size={16} /> ویرایش اطلاعات
+                  </Link>
+                  <button onClick={() => { setShowApproveModal(true); setShowActions(false); }} className="w-full flex items-center gap-2 p-3 text-sm font-bold text-emerald-600 hover:bg-emerald-50 rounded-xl">
+                    <CheckCircle size={16} /> تایید صلاحیت
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          <button onClick={() => navigate(-1)} className="p-3 bg-slate-100 rounded-2xl text-slate-400"><ArrowRight size={24} /></button>
         </div>
-        <div className="flex flex-wrap gap-3">
-          <button 
-            onClick={() => navigate(`/estimation?amount=${customer.matchedAmount.replace(/,/g, '')}`)}
-            className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-black shadow-xl shadow-emerald-100 transition-all hover:scale-105 active:scale-95"
-          >
-            <Calculator size={20} />
-            <span>برآورد تسهیلات برای این مشتری</span>
-          </button>
-          
-          <Link to={`/edit-customer/${customer.id}`} className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl font-black shadow-xl shadow-blue-100 transition-all hover:scale-105 active:scale-95">
-            <Edit size={18} />
-            <span>ویرایش اطلاعات</span>
-          </Link>
+      </header>
 
-          <button onClick={() => navigate(-1)} className="px-5 py-3 bg-white border-2 border-slate-100 rounded-2xl text-slate-600 hover:bg-slate-50 transition-colors">
-            <ArrowRight size={20} />
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Identifying Info */}
-        <section className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm space-y-6">
-          <div className="flex items-center gap-3 text-blue-600 font-black border-b border-blue-50 pb-4">
+      <div className="grid grid-cols-1 gap-8">
+        <section className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6">
+          <div className="flex items-center gap-3 text-indigo-600 font-black border-b pb-4 justify-end">
+             <span>هویتی</span>
              <User size={22} />
-             <span>اطلاعات هویتی</span>
           </div>
-          <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+          <div className="grid grid-cols-2 gap-6">
             <LabelValue label="نام و نام خانوادگی" value={customer.fullName} />
+            <LabelValue label="کد ملی" value={toPersianDigits(customer.nationalId)} />
+            <LabelValue label="تلفن همراه" value={toPersianDigits(customer.mobile)} />
             <LabelValue label="نام پدر" value={customer.fatherName} />
-            <LabelValue label="کد ملی" value={customer.nationalId} />
-            <LabelValue label="شماره شناسنامه" value={customer.certificateId} />
-            <LabelValue label="تاریخ تولد" value={customer.birthDate} />
-            <LabelValue label="موبایل" value={customer.mobile} />
-            <LabelValue label="تلفن ثابت" value={customer.fixedPhone} />
-            <LabelValue label="موبایل دوم" value={customer.secondMobile} />
-          </div>
-          <div className="pt-2">
-            <LabelValue label="آدرس سکونت" value={customer.address} />
           </div>
         </section>
 
-        {/* Job Info */}
-        <section className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm space-y-6">
-          <div className="flex items-center gap-3 text-emerald-600 font-black border-b border-emerald-50 pb-4">
-             <Briefcase size={22} />
-             <span>اطلاعات شغلی</span>
-          </div>
-          <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-            <LabelValue label="شغل" value={customer.jobTitle} />
-            <LabelValue label="سمت" value={customer.position} />
-            <LabelValue label="سابقه کار" value={customer.experienceYears + ' سال'} />
-            <LabelValue label="حقوق ماهانه" value={customer.salary} />
-            <LabelValue label="تلفن محل کار" value={customer.workPhone} />
-          </div>
-          <div className="pt-2">
-            <LabelValue label="آدرس محل کار" value={customer.workAddress} />
-          </div>
-        </section>
-
-        {/* Case Info */}
-        <section className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm space-y-6">
-          <div className="flex items-center gap-3 text-amber-600 font-black border-b border-amber-50 pb-4">
+        <section className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6">
+          <div className="flex items-center gap-3 text-amber-600 font-black border-b pb-4 justify-end">
+             <span>پرونده</span>
              <FileText size={22} />
-             <span>جزئیات پرونده و تسهیلات</span>
           </div>
-          <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+          <div className="grid grid-cols-2 gap-6">
+            <LabelValue label="مبلغ وام" value={toPersianDigits(customer.loanAmount)} />
             <LabelValue label="نوع خدمات" value={customer.serviceType} />
-            <LabelValue label="مبلغ وام" value={customer.loanAmount} />
-            <LabelValue label="نوع ضمانت" value={customer.guaranteeType} />
-            <LabelValue label="نام ضامن" value={customer.guarantorName} />
-            <LabelValue label="موبایل ضامن" value={customer.guarantorMobile} />
-            <LabelValue label="مبلغ متناسب تایید شده" value={customer.matchedAmount ? Number(customer.matchedAmount.replace(/,/g, '')).toLocaleString() + ' تومان' : '---'} />
-            <LabelValue label="هزینه دفتر" value={customer.officeFee} />
-            <LabelValue label="کسورات" value={customer.deductions} />
           </div>
         </section>
 
-        {/* Summary Info */}
-        <section className="bg-slate-900 p-8 rounded-[2rem] text-white space-y-6 shadow-xl shadow-slate-200">
-          <div className="flex items-center gap-3 text-blue-400 font-black border-b border-white/10 pb-4">
-             <BadgeCheck size={22} />
-             <span>خلاصه و اقدامات</span>
+        <section className="bg-slate-950 p-8 rounded-[2.5rem] text-white shadow-xl flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="text-right">
+             <span className="text-white/40 text-[10px] font-black uppercase mb-1 block">تاریخ نهایی‌سازی</span>
+             <p className="text-xl font-black digits-fa text-emerald-400">{toPersianDigits('۱۴۰۳/۰۶/۲۵')}</p>
           </div>
-          <div className="space-y-6">
-            <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
-              <span className="text-xs text-white/50 block mb-1">یادداشت‌های پرونده</span>
-              <p className="text-sm leading-relaxed">{customer.notes || 'یادداشتی ثبت نشده است.'}</p>
-            </div>
-            <div className="flex flex-col gap-4">
-               <Link to={`/print/${customer.id}`} className="flex items-center justify-center gap-2 w-full py-4 bg-white text-slate-900 rounded-2xl font-black hover:bg-slate-100 transition-colors">
-                 <Printer size={20} />
-                 چاپ مشخصات (A4)
-               </Link>
-               <div className="flex justify-between items-center px-2">
-                 <span className="text-xs text-white/60">شناسه سیستم:</span>
-                 <span className="text-xs font-mono">ID-{customer.id}</span>
-               </div>
-            </div>
-          </div>
+          <Link to={`/print/${customer.id}`} className="w-full md:w-auto flex items-center justify-center gap-3 py-4 px-10 bg-white text-slate-950 rounded-2xl font-black text-sm">
+            <Printer size={18} /> چاپ
+          </Link>
         </section>
       </div>
+
+      <AnimatePresence>
+        {showApproveModal && (
+          <div className="fixed inset-0 z-[500] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-sm">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 text-center shadow-2xl">
+              <CheckCircle size={48} className="text-emerald-500 mx-auto mb-4" />
+              <h3 className="text-xl font-black mb-2">تایید صلاحیت</h3>
+              <p className="text-slate-500 text-sm font-bold mb-8">آیا از تایید مدارک این مشتری اطمینان دارید؟</p>
+              <div className="flex gap-3">
+                <button onClick={() => setShowApproveModal(false)} className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black">تایید نهایی</button>
+                <button onClick={() => setShowApproveModal(false)} className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black">لغو</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

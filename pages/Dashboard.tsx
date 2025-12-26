@@ -1,169 +1,215 @@
 
-import React, { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Search, Bell, Plus, User as UserIcon, 
-  Wifi, ShieldCheck, ChevronLeft, Menu
+  Plus, Users, Clock, CheckCircle, ArrowUp, ArrowDown, LayoutGrid, X
 } from 'lucide-react';
 import { 
-  LineChart, Line, Tooltip, ResponsiveContainer,
-  BarChart, Bar, PieChart, Pie, Cell, XAxis
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
-import { formatCurrency, toPersianDigits } from '../utils/format';
-import { detectBank } from '../utils/bankUtils';
+import { toPersianDigits } from '../utils/format';
+import { MOCK_CUSTOMERS } from '../constants';
 import { useWindowDimensions } from '../hooks/useWindowDimensions';
+import { Link } from 'react-router-dom';
 
 const Dashboard: React.FC = () => {
-  const { width, isMobile } = useWindowDimensions();
-  const [cardNumber, setCardNumber] = useState('5041721012345678');
-  const bankInfo = useMemo(() => detectBank(cardNumber), [cardNumber]);
+  const { isMobile } = useWindowDimensions();
+  const [showWidgetSettings, setShowWidgetSettings] = useState(false);
+  const settingsRef = useRef<HTMLDivElement>(null);
+  
+  const [widgetOrder, setWidgetOrder] = useState<string[]>(() => {
+    const saved = localStorage.getItem('ata_widget_order');
+    return saved ? JSON.parse(saved) : ['kpis', 'analytics', 'statusBreakdown', 'events'];
+  });
 
-  const lineData = [{name:'فروردین',v:40},{name:'اردیبهشت',v:75},{name:'خرداد',v:65},{name:'تیر',v:90},{name:'مرداد',v:85},{name:'شهریور',v:110}];
-  const barData = [{name:'۱۴۰۱',v:4500},{name:'۱۴۰۲',v:8200},{name:'۱۴۰۳',v:9800}];
+  const [visibleWidgets, setVisibleWidgets] = useState(() => {
+    const saved = localStorage.getItem('ata_visible_widgets');
+    return saved ? JSON.parse(saved) : {
+      kpis: true, analytics: true, statusBreakdown: true, events: true
+    };
+  });
 
-  return (
-    <div className="flex flex-col w-full h-full gap-6 pb-20">
-      
-      {/* Search Header - Fully Flexible */}
-      <header className="flex flex-col sm:flex-row items-center gap-4 w-full bg-white p-4 rounded-[2rem] border border-slate-200 shadow-sm">
-        <div className="flex items-center flex-1 w-full gap-3 bg-slate-50 px-4 py-2.5 rounded-2xl border border-slate-100 group focus-within:bg-white transition-all">
-          <Search size={18} className="text-slate-400" />
-          <input 
-            type="text" 
-            placeholder="جستجوی سریع..." 
-            className="bg-transparent outline-none flex-1 text-xs font-bold text-slate-900" 
-          />
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <button className="p-3 bg-white border border-slate-200 rounded-xl text-slate-500 relative">
-            <Bell size={20} />
-            <div className="absolute top-3 right-3 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></div>
-          </button>
-          <div className="hidden sm:flex flex-col items-end">
-            <span className="text-[11px] font-black text-slate-900">جونس کانوالد</span>
-            <span className="text-[9px] text-slate-400 font-bold uppercase">Admin Panel</span>
-          </div>
-          <img src="https://i.pravatar.cc/100?u=jonas" className="w-10 h-10 rounded-xl object-cover border-2 border-slate-50 shadow-md" alt="پروفایل" />
-        </div>
-      </header>
+  useEffect(() => {
+    localStorage.setItem('ata_widget_order', JSON.stringify(widgetOrder));
+    localStorage.setItem('ata_visible_widgets', JSON.stringify(visibleWidgets));
+  }, [widgetOrder, visibleWidgets]);
 
-      {/* Welcome Message */}
-      <div className="flex flex-col gap-1 px-2">
-        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">خوش آمدید، جونس</h1>
-        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">میز کار اختصاصی سامانه آتا</p>
-      </div>
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
+        setShowWidgetSettings(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-      {/* Responsive Grid System */}
-      <div className="flex flex-col lg:flex-row gap-6 w-full h-full">
-        
-        {/* Main Content Area */}
-        <div className="flex flex-col flex-1 gap-6">
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-            {/* Smart Bank Card - Fixed Aspect Ratio */}
-            <motion.div 
-              className={`aspect-[1.6/1] w-full bg-gradient-to-br ${bankInfo.gradient} p-6 sm:p-8 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden flex flex-col justify-between`}
-            >
-              <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')]"></div>
-              
-              <div className="flex justify-between items-start relative z-10">
-                <div className="flex flex-col gap-1">
-                  <span className="text-[10px] font-black text-white/60 tracking-widest uppercase">{bankInfo.label}</span>
-                  <h2 className="text-xl sm:text-2xl font-black digits-fa">{formatCurrency('۲۵۸,۴۵۰,۰۰۰')}</h2>
-                </div>
-                <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center p-2">
-                  <ShieldCheck size={28} className="text-white" />
-                </div>
-              </div>
+  const moveWidget = (index: number, direction: 'up' | 'down') => {
+    const newOrder = [...widgetOrder];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex >= 0 && targetIndex < newOrder.length) {
+      const temp = newOrder[index];
+      newOrder[index] = newOrder[targetIndex];
+      newOrder[targetIndex] = temp;
+      setWidgetOrder(newOrder);
+    }
+  };
 
-              <div className="flex items-center gap-4 relative z-10">
-                <div className="w-10 h-7 bg-amber-400/90 rounded border border-amber-600/20 shadow-inner"></div>
-                <Wifi className="rotate-90 text-white/50" size={18} />
-              </div>
+  const lineData = [
+    {name:'فروردین',v:4000},{name:'اردیبهشت',v:7500},{name:'خرداد',v:6500},
+    {name:'تیر',v:9000},{name:'مرداد',v:8500},{name:'شهریور',v:11000}
+  ];
 
-              <div className="flex flex-col gap-2 relative z-10">
-                <input 
-                  type="text"
-                  maxLength={16}
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(e.target.value)}
-                  className="bg-transparent text-lg sm:text-2xl tracking-[0.2em] font-medium text-white digits-fa outline-none w-full text-center"
-                />
-                <div className="flex justify-between text-[10px] font-black text-white/40 tracking-widest uppercase">
-                  <span>EXP: ۰۲/۲۸</span>
-                  <span>CARDHOLDER</span>
-                </div>
-              </div>
-            </motion.div>
+  const statusSummary = useMemo(() => {
+    const counts = {
+      pending: MOCK_CUSTOMERS.filter(c => c.status === 'pending_payment').length,
+      waiting: MOCK_CUSTOMERS.filter(c => c.status === 'waiting_merat').length,
+      completed: MOCK_CUSTOMERS.filter(c => c.status === 'completed').length,
+      rejected: MOCK_CUSTOMERS.filter(c => c.status === 'rejected').length,
+    };
+    return counts;
+  }, []);
 
-            {/* Main Chart Card */}
-            <div className="bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm flex flex-col min-h-[240px]">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-sm font-black text-slate-900">منابع جذب شده</h3>
-                <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-full text-[9px] font-black">زنده</span>
-              </div>
-              <div className="flex-1 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={lineData}>
-                    <Tooltip contentStyle={{borderRadius: '1rem', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.05)'}} />
-                    <Line type="monotone" dataKey="v" stroke="#4F46E5" strokeWidth={5} dot={false} strokeLinecap="round" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
+  const renderWidget = (id: string) => {
+    if (!visibleWidgets[id]) return null;
 
-          {/* Secondary Stats Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full">
+    switch (id) {
+      case 'kpis':
+        return (
+          <div key="kpis" className={`flex ${isMobile ? 'flex-col overflow-y-auto max-h-[400px] no-scrollbar pr-1' : 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4'} gap-6`}>
             {[
-              { label: 'پرونده‌های جاری', val: '۱۲۴', color: 'text-indigo-600', bg: 'bg-indigo-50' },
-              { label: 'تسهیلات تایید شده', val: '۸۵', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-              { label: 'نیاز به بررسی', val: '۱۲', color: 'text-rose-600', bg: 'bg-rose-50' },
-            ].map((stat, i) => (
-              <div key={i} className="bg-white p-6 rounded-[2rem] border border-slate-100 flex flex-col gap-2 shadow-sm">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</span>
-                <div className="flex items-center justify-between">
-                  <span className={`text-2xl font-black digits-fa ${stat.color}`}>{stat.val}</span>
-                  <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center ${stat.color}`}>
-                    <Plus size={16} />
-                  </div>
+              { label: 'کل پرونده‌ها', val: '۱۲۴', icon: <Users size={22} />, color: 'bg-indigo-600' },
+              { label: 'تسهیلات تایید شده', val: '۸۵', icon: <CheckCircle size={22} />, color: 'bg-emerald-500' },
+              { label: 'در انتظار بررسی', val: '۱۲', icon: <Clock size={22} />, color: 'bg-amber-500' },
+              { label: 'سرمایه جاری', val: '۴.۲', icon: <Plus size={22} />, color: 'bg-violet-600' },
+            ].map((kpi, i) => (
+              <div key={i} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-right shrink-0">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white mb-4 ${kpi.color}`}>
+                  {kpi.icon}
                 </div>
+                <p className="text-[10px] font-black text-slate-400 uppercase mb-1">{kpi.label}</p>
+                <h4 className="text-2xl font-black text-slate-900 digits-fa">{toPersianDigits(kpi.val)}</h4>
               </div>
             ))}
           </div>
-        </div>
-
-        {/* Action Panel / Side Info */}
-        <div className="flex flex-col w-full lg:w-72 gap-6">
-          <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white shadow-xl flex flex-col gap-6 relative overflow-hidden">
-            <div className="relative z-10 flex flex-col gap-4">
-              <h3 className="text-base font-black">عملیات سریع</h3>
-              <button className="w-full py-4 bg-indigo-600 rounded-2xl font-black text-sm shadow-lg shadow-indigo-500/20 hover:scale-[1.02] transition-all">
-                تشکیل پرونده جدید
-              </button>
-              <button className="w-full py-4 bg-white/10 border border-white/10 rounded-2xl font-black text-sm hover:bg-white/20 transition-all">
-                مدیریت اعتبار بانکی
-              </button>
+        );
+      case 'analytics':
+        return (
+          <div key="analytics" className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm min-h-[350px] flex flex-col">
+            <h3 className="text-lg font-black text-slate-900 text-right mb-8">رشد جذب منابع</h3>
+            <div className="flex-1 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={lineData}>
+                  <defs>
+                    <linearGradient id="colorV" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.15}/>
+                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <Tooltip />
+                  <Area type="monotone" dataKey="v" stroke="#6366f1" strokeWidth={4} fill="url(#colorV)" />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
-            <ShieldCheck className="absolute -right-6 -bottom-6 w-32 h-32 text-white/5 rotate-12" />
           </div>
-
-          <div className="bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm flex-1">
-            <h3 className="text-sm font-black text-slate-900 mb-6">فعالیت‌های اخیر</h3>
-            <div className="space-y-5">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
-                  <div className="flex flex-col flex-1 overflow-hidden">
-                    <span className="text-[11px] font-bold text-slate-800 truncate">تراکنش جدید ثبت شد</span>
-                    <span className="text-[9px] text-slate-400">۱۰ دقیقه پیش</span>
+        );
+      case 'statusBreakdown':
+        return (
+          <div key="statusBreakdown" className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+            <h3 className="text-sm font-black text-slate-900 text-right mb-6">وضعیت پرونده‌ها</h3>
+            <div className="space-y-4">
+              {[
+                { label: 'تکمیل شده', val: statusSummary.completed, color: 'bg-emerald-500' },
+                { label: 'در انتظار تایید', val: statusSummary.waiting, color: 'bg-blue-500' },
+                { label: 'رد شده', val: statusSummary.rejected, color: 'bg-rose-500' },
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+                  <span className="text-sm font-black text-slate-900 digits-fa">{toPersianDigits(item.val)}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[12px] font-bold text-slate-600">{item.label}</span>
+                    <div className={`w-2.5 h-2.5 rounded-full ${item.color}`} />
                   </div>
-                  <ChevronLeft size={14} className="text-slate-300" />
                 </div>
               ))}
             </div>
           </div>
+        );
+      case 'events':
+        return (
+          <div key="events" className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm text-right">
+            <h3 className="text-sm font-black text-slate-900 mb-6">وقایع اخیر</h3>
+            <div className="space-y-4">
+              {[
+                { text: 'ثبت پرونده جدید: علی محمدی', time: '۱۰ دقیقه پیش' },
+                { text: 'واریز تسهیلات: مریم نبوی', time: '۱ ساعت پیش' }
+              ].map((e, i) => (
+                <div key={i} className="flex flex-col gap-1 border-b border-slate-50 pb-2 last:border-0">
+                  <span className="text-xs font-bold text-slate-700">{e.text}</span>
+                  <span className="text-[10px] text-slate-400 font-bold">{toPersianDigits(e.time)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      default: return null;
+    }
+  };
+
+  return (
+    <div className="flex flex-col w-full h-full gap-8 pb-20">
+      <section className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative">
+        <h1 className="text-3xl font-black text-slate-900 leading-tight">پیشخوان</h1>
+        
+        <div className="flex flex-row w-full lg:w-auto gap-3">
+           <Link to="/add-customer" className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm active:scale-95 transition-all shadow-lg">
+              <Plus size={18} />
+              پرونده جدید
+           </Link>
+           
+           <div className="relative" ref={settingsRef}>
+             <button onClick={() => setShowWidgetSettings(!showWidgetSettings)} className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-4 bg-white text-slate-900 border border-slate-200 rounded-2xl font-black text-sm active:scale-95 transition-all shadow-sm">
+                <LayoutGrid size={18} />
+                مدیریت
+             </button>
+
+             <AnimatePresence>
+                {showWidgetSettings && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: isMobile ? -10 : 10, scale: 0.95 }} 
+                    animate={{ opacity: 1, y: 0, scale: 1 }} 
+                    exit={{ opacity: 0, y: isMobile ? -10 : 10, scale: 0.95 }} 
+                    className={`absolute ${isMobile ? 'top-0 right-0' : 'left-0 lg:right-0 top-full mt-2'} w-64 bg-white rounded-3xl shadow-2xl border border-slate-100 p-4 z-[100]`}
+                  >
+                    <div className="flex justify-between items-center mb-4 border-b pb-2">
+                       <span className="text-sm font-black text-slate-700">ویجت‌ها</span>
+                       <button onClick={() => setShowWidgetSettings(false)} className="text-slate-300"><X size={16} /></button>
+                    </div>
+                    <div className="space-y-2">
+                      {widgetOrder.map((id, index) => (
+                        <div key={id} className="flex items-center justify-between p-2 bg-slate-50 rounded-xl">
+                          <div className="flex gap-1">
+                            <button onClick={() => moveWidget(index, 'up')} className="p-1 text-slate-400 hover:text-indigo-600"><ArrowUp size={12} /></button>
+                            <button onClick={() => moveWidget(index, 'down')} className="p-1 text-slate-400 hover:text-indigo-600"><ArrowDown size={12} /></button>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] font-bold text-slate-600">
+                              {id === 'kpis' ? 'آمار کل' : id === 'analytics' ? 'رشد منابع' : id === 'statusBreakdown' ? 'وضعیت‌ها' : 'وقایع'}
+                            </span>
+                            <input type="checkbox" checked={visibleWidgets[id]} onChange={() => setVisibleWidgets({...visibleWidgets, [id]: !visibleWidgets[id]})} className="w-4 h-4 rounded text-indigo-600 border-slate-200" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+             </AnimatePresence>
+           </div>
         </div>
+      </section>
+
+      <div className="flex flex-col gap-8">
+        {widgetOrder.map(renderWidget)}
       </div>
     </div>
   );
