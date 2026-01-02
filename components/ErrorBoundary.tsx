@@ -1,5 +1,4 @@
-
-import React, { ErrorInfo, ReactNode } from 'react';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCcw } from 'lucide-react';
 
 interface Props {
@@ -10,8 +9,8 @@ interface State {
   hasError: boolean;
 }
 
-// Fix: Inherit from React.Component directly to resolve TypeScript's failure to recognize 'props' on the component instance
-class ErrorBoundary extends React.Component<Props, State> {
+// Fixed: Inheriting from Component<Props, State> directly from the react import to resolve the TypeScript error where 'this.props' was not recognized on the class instance.
+class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false
   };
@@ -48,7 +47,7 @@ class ErrorBoundary extends React.Component<Props, State> {
       );
     }
 
-    // Fix: Access children through this.props which is now correctly recognized via React.Component inheritance
+    // Fixed: 'this.props' is now correctly inherited from Component<Props, State> through named import.
     return this.props.children;
   }
 }
