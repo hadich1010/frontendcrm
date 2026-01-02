@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Printer } from 'lucide-react';
+import { Printer, Calculator, Info } from 'lucide-react';
 import { toPersianDigits, numberToWords } from '../utils/format';
 
 const FacilityEstimation: React.FC = () => {
@@ -120,8 +120,5 @@ const FacilityEstimation: React.FC = () => {
     </div>
   );
 };
-
-// Simple import for the missing icon in the fallback
-import { Calculator, Info } from 'lucide-react';
 
 export default FacilityEstimation;

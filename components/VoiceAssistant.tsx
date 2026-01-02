@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenAI, Modality } from '@google/genai';
+import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 import { Mic, MicOff, X, Sparkles, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -7,7 +7,9 @@ const VoiceAssistant: React.FC = () => {
   const [isActive, setIsActive] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [status, setStatus] = useState<string>('در انتظار دستور...');
-  const [nextStartTime, setNextStartTime] = useState(0);
+  // Fix: nextStartTime acts as a cursor to track the end of the audio playback queue.
+  // Using a ref avoids stale closures and ensures smooth, gapless playback.
+  const nextStartTimeRef = useRef(0);
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const sessionRef = useRef<any>(null);
@@ -35,10 +37,16 @@ const VoiceAssistant: React.FC = () => {
   };
 
   // Fix: Implemented manual PCM decoding as per GenAI guidelines to handle raw audio streams
-  const decodeAudioData = async (data: Uint8Array, ctx: AudioContext, sampleRate: number, numChannels: number) => {
+  const decodeAudioData = async (
+    data: Uint8Array,
+    ctx: AudioContext,
+    sampleRate: number,
+    numChannels: number,
+  ): Promise<AudioBuffer> => {
     const dataInt16 = new Int16Array(data.buffer);
     const frameCount = dataInt16.length / numChannels;
     const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
+
     for (let channel = 0; channel < numChannels; channel++) {
       const channelData = buffer.getChannelData(channel);
       for (let i = 0; i < frameCount; i++) {
@@ -67,42 +75,55 @@ const VoiceAssistant: React.FC = () => {
             setStatus('آماده شنیدن (فارسی صحبت کنید)');
             setIsListening(true);
             const source = inputCtx.createMediaStreamSource(stream);
-            const processor = inputCtx.createScriptProcessor(4096, 1, 1);
-            processor.onaudioprocess = (e) => {
-              const inputData = e.inputBuffer.getChannelData(0);
+            const scriptProcessor = inputCtx.createScriptProcessor(4096, 1, 1);
+            scriptProcessor.onaudioprocess = (audioProcessingEvent) => {
+              const inputData = audioProcessingEvent.inputBuffer.getChannelData(0);
               const int16 = new Int16Array(inputData.length);
               for (let i = 0; i < inputData.length; i++) {
                 int16[i] = inputData[i] * 32768;
               }
               // Fix: Use manual encode function to convert PCM audio to base64
-              const base64 = encode(new Uint8Array(int16.buffer));
-              // Ensure sendRealtimeInput is only called after sessionPromise resolves
-              sessionPromise.then(s => s.sendRealtimeInput({ 
-                media: { data: base64, mimeType: 'audio/pcm;rate=16000' } 
-              }));
+              const base64Data = encode(new Uint8Array(int16.buffer));
+              // CRITICAL: Solely rely on sessionPromise resolves and then call `session.sendRealtimeInput`
+              sessionPromise.then((session) => {
+                session.sendRealtimeInput({
+                  media: { data: base64Data, mimeType: 'audio/pcm;rate=16000' }
+                });
+              });
             };
-            source.connect(processor);
-            processor.connect(inputCtx.destination);
+            source.connect(scriptProcessor);
+            scriptProcessor.connect(inputCtx.destination);
           },
-          onmessage: async (msg: any) => {
-            const audioData = msg.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
-            if (audioData && audioContextRef.current) {
+          onmessage: async (message: LiveServerMessage) => {
+            const base64EncodedAudioString =
+              message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
+            if (base64EncodedAudioString && audioContextRef.current) {
               const ctx = audioContextRef.current;
-              const buffer = await decodeAudioData(decode(audioData), ctx, 24000, 1);
+              const audioBuffer = await decodeAudioData(
+                decode(base64EncodedAudioString),
+                ctx,
+                24000,
+                1,
+              );
               const source = ctx.createBufferSource();
-              source.buffer = buffer;
+              source.buffer = audioBuffer;
               source.connect(ctx.destination);
               
-              const startTime = Math.max(nextStartTime, ctx.currentTime);
+              // Fix: Use Ref value to avoid stale closure issues and ensure gapless playback
+              const startTime = Math.max(nextStartTimeRef.current, ctx.currentTime);
               source.start(startTime);
-              setNextStartTime(startTime + buffer.duration);
+              nextStartTimeRef.current = startTime + audioBuffer.duration;
               sourcesRef.current.add(source);
-              source.onended = () => sourcesRef.current.delete(source);
+              source.addEventListener('ended', () => {
+                sourcesRef.current.delete(source);
+              });
             }
-            if (msg.serverContent?.interrupted) {
-              sourcesRef.current.forEach(s => s.stop());
-              sourcesRef.current.clear();
-              setNextStartTime(0);
+            if (message.serverContent?.interrupted) {
+              for (const source of sourcesRef.current.values()) {
+                source.stop();
+                sourcesRef.current.delete(source);
+              }
+              nextStartTimeRef.current = 0;
             }
           },
           onclose: () => setIsActive(false),
@@ -110,7 +131,9 @@ const VoiceAssistant: React.FC = () => {
         },
         config: {
           responseModalities: [Modality.AUDIO],
-          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } },
+          speechConfig: {
+            voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } },
+          },
           systemInstruction: 'You are a professional assistant for ATA Management System. Speak exclusively in Persian (Farsi). Answer short and helpful. You can help with loans, customers and team management queries.'
         }
       });
@@ -126,6 +149,7 @@ const VoiceAssistant: React.FC = () => {
     if (sessionRef.current) sessionRef.current.close();
     setIsActive(false);
     setIsListening(false);
+    nextStartTimeRef.current = 0;
   };
 
   return (
